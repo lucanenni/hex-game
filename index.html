@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEX · Il Gioco della Connessione</title>
+<meta name="description" content="HEX, il classico gioco da tavolo di connessione inventato da Piet Hein e John Nash: gioca nel browser contro un amico o contro il PC, con regola della torta e board fino a 13x13.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,3 95,27 95,73 50,97 5,73 5,27' fill='%23ef4444'/%3E%3Cpolygon points='50,15 84,33 84,67 50,85 16,67 16,33' fill='%2306b6d4'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="turn-p1">
+  <div class="grain"></div>
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+    <header class="mb-8 lg:mb-10">
+      <div class="flex items-end justify-between flex-wrap gap-6">
+        <div>
+          <div class="flex items-baseline gap-3 mb-1">
+            <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl font-extrabold tracking-tighter title-gradient">HEX</h1>
+            <span class="text-xs text-[var(--muted)] font-mono uppercase tracking-widest">est. 1942</span>
+          </div>
+          <p class="text-[var(--muted)] text-sm tracking-wide">Il gioco della connessione pura · nessun pareggio possibile</p>
+        </div>
+        <div class="text-right text-xs text-[var(--muted)] max-w-xs leading-relaxed">
+          <div class="mb-1"><span class="inline-block w-2 h-2 rounded-full bg-[var(--p1)] align-middle mr-1.5"></span>Rosso: collega <span class="text-[var(--p1-bright)] font-semibold">alto ↔ basso</span></div>
+          <div><span class="inline-block w-2 h-2 rounded-full bg-[var(--p2)] align-middle mr-1.5"></span>Ciano: collega <span class="text-[var(--p2-bright)] font-semibold">sinistra ↔ destra</span></div>
+        </div>
+      </div>
+    </header>
+    <div class="main-grid grid lg:grid-cols-[1fr_360px] gap-6">
+      <div class="relative">
+        <div class="panel p-4 sm:p-6 lg:p-8">
+          <div id="boardContainer" class="w-full flex justify-center"></div>
+        </div>
+        <div id="winOverlay" class="win-overlay hidden"></div>
+      </div>
+      <aside class="space-y-4">
+        <div class="panel p-5">
+          <h2 class="font-display text-lg font-bold mb-4 flex items-center justify-between">
+            <span>Configurazione</span>
+            <span class="text-xs text-[var(--muted)] font-mono font-normal">setup</span>
+          </h2>
+          <div class="space-y-4">
+            <div>
+              <div class="label-small mb-2">Modalità</div>
+              <div class="seg" data-group="mode">
+                <button data-value="pvp" class="active">2 Giocatori</button>
+                <button data-value="pvc">vs PC</button>
+              </div>
+            </div>
+            <div id="difficultySection" class="hidden">
+              <div class="label-small mb-2">Difficoltà PC</div>
+              <div class="seg" data-group="diff">
+                <button data-value="easy">Facile</button>
+                <button data-value="medium" class="active">Medio</button>
+                <button data-value="hard">Difficile</button>
+              </div>
+            </div>
+            <div>
+              <div class="label-small mb-2">Dimensione</div>
+              <div class="seg" data-group="size">
+                <button data-value="7">7</button>
+                <button data-value="9">9</button>
+                <button data-value="11" class="active">11</button>
+                <button data-value="13">13</button>
+              </div>
+            </div>
+            <div>
+              <div class="label-small mb-2">Inizia</div>
+              <div class="seg" data-group="starter">
+                <button data-value="1" class="active">Rosso</button>
+                <button data-value="2">Ciano</button>
+                <button data-value="random">Casuale</button>
+              </div>
+            </div>
+            <label class="custom-check">
+              <input type="checkbox" id="pieRule" checked>
+              <span class="box"></span>
+              <span class="text-sm">Regola della torta <span class="text-[var(--muted)] text-xs">(pie rule)</span></span>
+            </label>
+          </div>
+          <button id="newGameBtn" class="btn btn-primary w-full mt-5">Nuova partita</button>
+        </div>
+        <div class="panel p-5">
+          <h2 class="font-display text-lg font-bold mb-3">Stato</h2>
+          <div id="statusInfo" aria-live="polite"></div>
+          <div id="pieRuleUI" class="hidden mt-4"></div>
+        </div>
+        <div class="panel p-5">
+          <h2 class="font-display text-lg font-bold mb-3 flex items-center justify-between">
+            <span>Mosse</span>
+            <span id="moveCount" class="text-xs text-[var(--muted)] font-mono font-normal">0</span>
+          </h2>
+          <div id="moveLog" class="move-log space-y-0.5"></div>
+        </div>
+      </aside>
+    </div>
+    <section class="mt-10 panel p-6 lg:p-8">
+      <h2 class="font-display text-2xl lg:text-3xl font-bold mb-6">Come si gioca</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-[var(--p1)]/20 border border-[var(--p1)]/40 flex items-center justify-center">
+              <div class="w-3 h-3 rounded-full bg-[var(--p1-bright)]"></div>
+            </div>
+            <h3 class="font-display text-base font-bold">Obiettivo</h3>
+          </div>
+          <p class="text-sm text-[var(--muted)] leading-relaxed">Il <span class="text-[var(--p1-bright)] font-semibold">Rosso</span> deve unire il bordo superiore a quello inferiore con una catena ininterrotta di proprie pedine. Il <span class="text-[var(--p2-bright)] font-semibold">Ciano</span> deve unire il bordo sinistro al destro. Vince chi crea per primo una connessione completa.</p>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-[var(--accent)]/15 border border-[var(--accent)]/40 flex items-center justify-center text-[var(--accent)]">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+            </div>
+            <h3 class="font-display text-base font-bold">Svolgimento</h3>
+          </div>
+          <p class="text-sm text-[var(--muted)] leading-relaxed">I giocatori si alternano piazzando una propria pedina in una qualsiasi cella vuota. Non è possibile passare il turno né spostare pedine già piazzate. Non esistono pareggi: la partita termina non appena uno dei due completa la propria connessione.</p>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-[var(--p2)]/20 border border-[var(--p2)]/40 flex items-center justify-center">
+              <div class="w-3 h-3 rounded-full bg-[var(--p2-bright)]"></div>
+            </div>
+            <h3 class="font-display text-base font-bold">Regola della torta</h3>
+          </div>
+          <p class="text-sm text-[var(--muted)] leading-relaxed">Per bilanciare il vantaggio della prima mossa, dopo la mossa iniziale il secondo giocatore può dichiarare "<span class="text-[var(--accent)] font-semibold">swap</span>": la prima pedina diventa sua, e tocca ora al primo giocatore muovere. Una scelta equilibrata richiede di swappare se la mossa è troppo forte (al centro), di accettare se è debole (ai bordi).</p>
+        </div>
+      </div>
+    </section>
+    <footer class="mt-8 text-center text-xs text-[var(--muted)]">
+      <p>Hex fu inventato indipendentemente da <span class="text-[var(--text)]">Piet Hein</span> (1942) e <span class="text-[var(--text)]">John Nash</span> (1948). Un gioco di connessione perfetto.</p>
+    </footer>
+  </div>
+  <div id="toastContainer" aria-live="polite"></div>
+  <script defer src="js/hexGame.js"></script>
+  <script defer src="js/ai.js"></script>
+  <script defer src="js/app.js"></script>
+</body>
+</html>
