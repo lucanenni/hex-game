@@ -83,8 +83,7 @@ function greedyMove(game, empties, player) {
   return bestMove;
 }
 
-function minimaxMove(game, empties, player) {
-  // Pre-filtra i candidati migliori
+function rankedMoves(game, player, empties) {
   const scored = empties.map(([q, r]) => {
     game.board[r][q] = player;
     const myPath = shortestPathLength(game.board, game.size, player);
@@ -93,32 +92,64 @@ function minimaxMove(game, empties, player) {
     return { q, r, score: oppPath - myPath * 1.15 };
   });
   scored.sort((a, b) => b.score - a.score);
-  const candidates = scored.slice(0, Math.min(10, scored.length));
-  let bestScore = -Infinity, bestMove = [candidates[0].q, candidates[0].r];
+  return scored;
+}
+
+// Alpha-beta a profondità limitata: esplora alternanze di mosse (non solo la
+// risposta immediata dell'avversario) per dare all'IA "difficile" una reale
+// visione tattica su più semi-mosse, con potatura per restare veloce anche
+// su board 13x13.
+const SEARCH_DEPTH = 4; // AI, avversario, AI, avversario
+const BRANCH_LIMITS = [8, 6, 5, 4]; // candidati esplorati per livello di profondità
+
+function alphaBeta(game, depth, alpha, beta, toMove, aiPlayer) {
+  const empties = game.getEmptyCells();
+  if (depth === 0 || empties.length === 0) return evaluateForPlayer(game, aiPlayer);
+
+  const limit = BRANCH_LIMITS[BRANCH_LIMITS.length - depth] ?? BRANCH_LIMITS[BRANCH_LIMITS.length - 1];
+  const candidates = rankedMoves(game, toMove, empties).slice(0, Math.min(limit, empties.length));
+  const maximizing = toMove === aiPlayer;
+  let best = maximizing ? -Infinity : Infinity;
+
   for (const { q, r } of candidates) {
-    game.board[r][q] = player;
-    // Vittoria immediata?
-    if (game.findWinPath(player)) { game.board[r][q] = 0; return [q, r]; }
-    // Risposta dell'avversario (la peggiore per noi)
-    let worstForMe = Infinity;
-    const oppEmpties = game.getEmptyCells();
-    const oppScored = oppEmpties.map(([oq, or_]) => {
-      game.board[or_][oq] = 3 - player;
-      const myP = shortestPathLength(game.board, game.size, 3 - player);
-      const oppP = shortestPathLength(game.board, game.size, player);
-      game.board[or_][oq] = 0;
-      return { q: oq, r: or_, score: oppP - myP * 1.15 };
-    });
-    oppScored.sort((a, b) => b.score - a.score);
-    const oppCandidates = oppScored.slice(0, Math.min(6, oppScored.length));
-    for (const { q: oq, r: or_ } of oppCandidates) {
-      game.board[or_][oq] = 3 - player;
-      const score = evaluateForPlayer(game, player);
-      game.board[or_][oq] = 0;
-      if (score < worstForMe) worstForMe = score;
+    game.board[r][q] = toMove;
+    let score;
+    if (game.findWinPath(toMove)) {
+      // Preferisci vittorie più rapide e sconfitte più lontane nel tempo.
+      score = (toMove === aiPlayer ? 100000 : -100000) + (maximizing ? -depth : depth);
+    } else {
+      score = alphaBeta(game, depth - 1, alpha, beta, 3 - toMove, aiPlayer);
     }
     game.board[r][q] = 0;
-    if (worstForMe > bestScore) { bestScore = worstForMe; bestMove = [q, r]; }
+
+    if (maximizing) {
+      if (score > best) best = score;
+      alpha = Math.max(alpha, score);
+    } else {
+      if (score < best) best = score;
+      beta = Math.min(beta, score);
+    }
+    if (beta <= alpha) break;
+  }
+  return best;
+}
+
+function minimaxMove(game, empties, player) {
+  const candidates = rankedMoves(game, player, empties).slice(0, Math.min(BRANCH_LIMITS[0], empties.length));
+  let bestScore = -Infinity, bestMove = [candidates[0].q, candidates[0].r];
+  let alpha = -Infinity;
+  const beta = Infinity;
+  for (const { q, r } of candidates) {
+    game.board[r][q] = player;
+    let score;
+    if (game.findWinPath(player)) {
+      game.board[r][q] = 0;
+      return [q, r];
+    }
+    score = alphaBeta(game, SEARCH_DEPTH - 1, alpha, beta, 3 - player, player);
+    game.board[r][q] = 0;
+    if (score > bestScore) { bestScore = score; bestMove = [q, r]; }
+    alpha = Math.max(alpha, score);
   }
   return bestMove;
 }

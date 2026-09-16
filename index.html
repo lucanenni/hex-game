@@ -14,30 +14,24 @@
 </head>
 <body class="turn-p1">
   <div class="grain"></div>
-  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-    <header class="mb-8 lg:mb-10">
-      <div class="flex items-end justify-between flex-wrap gap-6">
-        <div>
-          <div class="flex items-baseline gap-3 mb-1">
-            <h1 class="font-display text-6xl sm:text-7xl lg:text-8xl font-extrabold tracking-tighter title-gradient">HEX</h1>
-            <span class="text-xs text-[var(--muted)] font-mono uppercase tracking-widest">est. 1942</span>
-          </div>
-          <p class="text-[var(--muted)] text-sm tracking-wide">Il gioco della connessione pura · nessun pareggio possibile</p>
+  <div class="app-shell relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-4">
+    <header class="mb-3 lg:mb-4 flex-shrink-0">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div class="flex items-baseline gap-3">
+          <h1 class="font-display text-3xl sm:text-4xl font-extrabold tracking-tighter title-gradient">HEX</h1>
+          <span class="text-xs text-[var(--muted)] font-mono hidden sm:inline">Rosso: alto↔basso · Ciano: sinistra↔destra</span>
         </div>
-        <div class="text-right text-xs text-[var(--muted)] max-w-xs leading-relaxed">
-          <div class="mb-1"><span class="inline-block w-2 h-2 rounded-full bg-[var(--p1)] align-middle mr-1.5"></span>Rosso: collega <span class="text-[var(--p1-bright)] font-semibold">alto ↔ basso</span></div>
-          <div><span class="inline-block w-2 h-2 rounded-full bg-[var(--p2)] align-middle mr-1.5"></span>Ciano: collega <span class="text-[var(--p2-bright)] font-semibold">sinistra ↔ destra</span></div>
-        </div>
+        <button id="rulesBtn" class="btn text-xs">Come si gioca</button>
       </div>
     </header>
-    <div class="main-grid grid lg:grid-cols-[1fr_360px] gap-6">
-      <div class="relative">
-        <div class="panel p-4 sm:p-6 lg:p-8">
-          <div id="boardContainer" class="w-full flex justify-center"></div>
+    <div class="main-grid grid lg:grid-cols-[1fr_360px] gap-6 lg:flex-1 lg:min-h-0">
+      <div class="relative lg:min-h-0">
+        <div class="panel p-4 sm:p-6 lg:p-8 board-panel lg:min-h-0 lg:h-full">
+          <div id="boardContainer" class="w-full h-full flex justify-center"></div>
         </div>
         <div id="winOverlay" class="win-overlay hidden"></div>
       </div>
-      <aside class="space-y-4">
+      <aside class="space-y-4 scroll-area">
         <div class="panel p-5">
           <h2 class="font-display text-lg font-bold mb-4 flex items-center justify-between">
             <span>Configurazione</span>
@@ -98,8 +92,13 @@
         </div>
       </aside>
     </div>
-    <section class="mt-10 panel p-6 lg:p-8">
-      <h2 class="font-display text-2xl lg:text-3xl font-bold mb-6">Come si gioca</h2>
+  </div>
+  <dialog id="rulesDialog" class="rules-dialog">
+    <div class="panel p-6 lg:p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="font-display text-2xl lg:text-3xl font-bold">Come si gioca</h2>
+        <button id="rulesCloseBtn" class="btn text-xs" aria-label="Chiudi">✕</button>
+      </div>
       <div class="grid md:grid-cols-3 gap-8">
         <div>
           <div class="flex items-center gap-2 mb-3">
@@ -129,11 +128,9 @@
           <p class="text-sm text-[var(--muted)] leading-relaxed">Per bilanciare il vantaggio della prima mossa, dopo la mossa iniziale il secondo giocatore può dichiarare "<span class="text-[var(--accent)] font-semibold">swap</span>": la prima pedina diventa sua, e tocca ora al primo giocatore muovere. Una scelta equilibrata richiede di swappare se la mossa è troppo forte (al centro), di accettare se è debole (ai bordi).</p>
         </div>
       </div>
-    </section>
-    <footer class="mt-8 text-center text-xs text-[var(--muted)]">
-      <p>Hex fu inventato indipendentemente da <span class="text-[var(--text)]">Piet Hein</span> (1942) e <span class="text-[var(--text)]">John Nash</span> (1948). Un gioco di connessione perfetto.</p>
-    </footer>
-  </div>
+      <p class="mt-8 text-center text-xs text-[var(--muted)]">Hex fu inventato indipendentemente da <span class="text-[var(--text)]">Piet Hein</span> (1942) e <span class="text-[var(--text)]">John Nash</span> (1948). Un gioco di connessione perfetto.</p>
+    </div>
+  </dialog>
   <div id="toastContainer" aria-live="polite"></div>
   <script defer src="js/hexGame.js"></script>
   <script defer src="js/ai.js"></script>

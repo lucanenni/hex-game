@@ -41,7 +41,7 @@ function renderBoard() {
   const winSet = new Set();
   if (game.winPath) for (const [q, r] of game.winPath) winSet.add(q + ',' + r);
 
-  let svg = '<svg viewBox="0 0 ' + svgW.toFixed(2) + ' ' + svgH.toFixed(2) + '" class="w-full h-auto" style="max-height:78vh">';
+  let svg = '<svg viewBox="0 0 ' + svgW.toFixed(2) + ' ' + svgH.toFixed(2) + '">';
   svg += '<defs>';
   svg += '<radialGradient id="p1-grad" cx="0.35" cy="0.3" r="0.8"><stop offset="0%" stop-color="#ffadad"/><stop offset="35%" stop-color="#ef4444"/><stop offset="100%" stop-color="#7f1d1d"/></radialGradient>';
   svg += '<radialGradient id="p2-grad" cx="0.35" cy="0.3" r="0.8"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="35%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#155e75"/></radialGradient>';
@@ -345,6 +345,10 @@ function setupUI() {
   });
   document.getElementById('pieRule').addEventListener('change', e => { settings.pieRule = e.target.checked; });
   document.getElementById('newGameBtn').addEventListener('click', startNewGame);
+  const rulesDialog = document.getElementById('rulesDialog');
+  document.getElementById('rulesBtn').addEventListener('click', () => rulesDialog.showModal());
+  document.getElementById('rulesCloseBtn').addEventListener('click', () => rulesDialog.close());
+  rulesDialog.addEventListener('click', e => { if (e.target === rulesDialog) rulesDialog.close(); });
   // Allinea la visibilità del selettore difficoltà alla modalità attiva di default
   const activeModeBtn = document.querySelector('.seg[data-group="mode"] button.active');
   document.getElementById('difficultySection').classList.toggle('hidden', !activeModeBtn || activeModeBtn.dataset.value !== 'pvc');
